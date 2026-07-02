@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康旅行有我在 - 智慧行程助手</title>
+    <!-- 引入 Font Awesome 圖標庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --secondary-color: #00796b;
+            --bg-color: #f1f8e9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* 頂部導航欄（含語言選擇） */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .lang-selector {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .lang-selector i {
+            margin-right: 8px;
+        }
+
+        .lang-selector select {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .lang-selector select option {
+            color: black;
+        }
+
+        /* 頁面容器 */
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            min-height: 400px;
+        }
+
+        /* 隱藏區塊 */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 按鈕樣式 */
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* 表單元素 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input[type="number"], input[type="date"], select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .checkbox-group, .radio-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .checkbox-item, .radio-item {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .checkbox-item input, .radio-item input {
+            margin-right: 10px;
+        }
+
+        /* 澳門地圖模擬區 */
+        .map-container {
+            position: relative;
+            background: #e0f2f1;
+            height: 250px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px dashed #00796b;
+            overflow: hidden;
+        }
+
+        .map-title {
+            text-align: center;
+            padding-top: 10px;
+            color: #555;
+        }
+
+        .map-pin {
+            position: absolute;
+            background: #d32f2f;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* 模擬澳門三個主要區域的位置 */
+        #pin1 { top: 30px; left: 40%; }     /* 澳門半島 */
+        #pin2 { top: 120px; left: 45%; }    /* 氹仔 */
+        #pin3 { top: 200px; left: 50%; }    /* 路環 */
+
+        .weather-info {
+            background: #fff59d;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* SDGs 標籤提示 */
+        .sdgs-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .sdgs-badge.equality { background-color: #e1f5fe; color: #0288d1; }
+
+        /* 彈窗樣式 (Modal) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        .close-btn {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 頂部導航欄（語言切換不佔獨立版面） -->
+    <header>
+        <div class="logo"><i class="fa-solid fa-wheelchair-move"></i> 健康旅行有我在</div>
+        <div class="lang-selector">
+            <i class="fa-solid fa-earth-asia"></i>
+            <select id="langSelect">
+                <option value="zh-TW" selected>繁體中文</option>
+                <option value="zh-CN">簡體中文</option>
+                <option value="en">English</option>
+                <option value="ko">한국어</option>
+                <option value="ja">日本語</option>
+                <option value="pt">Português</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- 第 1 頁：歡迎首頁 -->
+        <div id="page1" class="page active">
+            <h1 style="text-align: center; color: var(--primary-color);">健康旅行有我在</h1>
+            <p style="text-align: center; color: #666;">這是一款專為所有人設計的智慧行程安排 App</p>
+            <div style="text-align: center; margin: 40px 0;">
+                <i class="fa-solid fa-route" style="font-size: 5rem; color: var(--primary-color);"></i>
+            </div>
+            <button onclick="nextPage(2)">開始體驗</button>
+        </div>
+
+        <!-- 第 2 頁：健康問卷 (年齡與性別) -->
+        <div id="page2" class="page">
+            <h2>基本健康資料 (1/2)</h2>
+            <div class="form-group">
+                <label for="age">您的年齡：</label>
+                <input type="number" id="age" min="0" max="120" placeholder="請輸入年齡">
+            </div>
+            <div class="form-group">
+                <label>您的性別：</label>
+                <div class="radio-group">
+                    <label class="radio-item"><input type="radio" name="gender" value="male" onclick="togglePeriod(false)"> 男</label>
+                    <label class="radio-item"><input type="radio" name="gender" value="female" onclick="togglePeriod(true)"> 女</label>
+                </div>
+            </div>
+            <!-- 生理期動態問題 -->
+            <div class="form-group" id="periodQuestion" style="display: none;">
+                <label>目前是否有月經/生理期不適？</label>
+                <div class="radio-group">
+                    <label class="radio-item"><input type="radio" name="period" value="yes"> 是 (行程將調低強度)</label>
+                    <label class="radio-item"><input type="radio" name="period" value="no"> 否</label>
+                </div>
+            </div>
+            <button onclick="nextPage(3)">下一步</button>
+        </div>
+
+        <!-- 第 3 頁：慢性疾病篩選 -->
+        <div id="page3" class="page">
+            <h2>基本健康資料 (2/2)</h2>
+            <div class="form-group">
+                <label>是否有慢性疾病？</label>
+                <div class="radio-group">
+                    <label class="radio-item"><input type="radio" name="hasChronic" value="yes" onclick="toggleChronic(true)"> 有</label>
+                    <label class="radio-item"><input type="radio" name="hasChronic" value="no" onclick="toggleChronic(false)"> 無</label>
+                </div>
+            </div>
+            <!-- 慢性病大類別多選 -->
+            <div class="form-group" id="chronicCategories" style="display: none;">
+                <label>請選擇疾病大類別（可多選，我們將為您篩選無障礙與醫療友善路線）：</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item"><input type="checkbox" name="chronic" value="cardio"> 心血管疾病</label>
+                    <label class="checkbox-item"><input type="checkbox" name="chronic" value="diabetes"> 糖尿病</label>
+                    <label class="checkbox-item"><input type="checkbox" name="chronic" value="mobility"> 行動不便/殘疾 <span class="sdgs-badge equality">SDGs 10</span></label>
+                    <label class="checkbox-item"><input type="checkbox" name="chronic" value="respiratory"> 呼吸系統疾病</label>
+                </div>
+            </div>
+            <button onclick="nextPage(4)">進入地圖首頁</button>
+        </div>
+
+        <!-- 第 4 頁：澳門地圖與核心功能主頁 -->
+        <div id="page4" class="page">
+            <h2>澳門智慧導覽</h2>
+            <p class="subtitle">點擊地圖上的區域可查看實時溫濕度資訊：</p>
+            
+            <!-- 模擬澳門地圖 -->
+            <div class="map-container">
+                <div class="map-title"><i class="fa-solid fa-map"></i> 澳門互動模擬地圖</div>
+                <div id="pin1" class="map-pin" onclick="showWeather('澳門半島', '26°C', '78%')">澳門半島</div>
+                <div id="pin2" class="map-pin" onclick="showWeather('氹仔', '25°C', '80%')">氹仔</div>
+                <div id="pin3" class="map-pin" onclick="showWeather('路環', '24°C', '85%')">路環</div>
+            </div>
+
+            <!-- 氣象資訊顯示區 -->
+            <div id="weatherDisplay" class="weather-info"></div>
+
+            <!-- 功能按鈕區 -->
+            <button onclick="openModal('routeModal')" style="background-color: var(--secondary-color);">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> 一鍵生成旅行路線
+            </button>
+            <button onclick="openModal('flightModal')" style="background-color: #1e88e5;">
+                <i class="fa-solid fa-plane"></i> 機票選擇與對比
+            </button>
+        </div>
+    </div>
+
+    <!-- 彈窗 1：一鍵生成旅行路線 -->
+    <div id="routeModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('routeModal')">&times;</span>
+            <h3><i class="fa-solid fa-calendar-days"></i> 行程偏好設定</h3>
+            
+            <div class="form-group">
+                <label>選擇旅行日期：</label>
+                <input type="date" id="travelDate">
+            </div>
+
+            <div class="form-group">
+                <label>和誰一起去？（多選）：</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item"><input type="checkbox" name="companion" value="alone"> 獨自一人</label>
+                    <label class="checkbox-item"><input type="checkbox" name="companion" value="family"> 家人老小</label>
+                    <label class="checkbox-item"><input type="checkbox" name="companion" value="friends"> 朋友</label>
+                    <label class="checkbox-item"><input type="checkbox" name="companion" value="disabled"> 殘疾/行動不便親友</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>想要旅行的強度：</label>
+                <select id="intensity">
+                    <option value="low">休閒放鬆（多無障礙設施、坡道、步調慢）</option>
+                    <option value="medium">標準觀光（適度步行）</option>
+                    <option value="high">特種兵行程（高強度景點打卡）</option>
+                </select>
+            </div>
+
+            <button onclick="generateRoute()">開始智能生成</button>
+            
+            <!-- 生成結果展示區 -->
+            <div id="routeResult" style="margin-top: 15px; display: none; padding: 10px; background: #f0f4c3; border-radius: 8px;"></div>
+        </div>
+    </div>
+
+    <!-- 彈窗 2：機票選擇 -->
+    <div id="flightModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('flightModal')">&times;</span>
+            <h3><i class="fa-solid fa-plane-departure"></i> 機票智慧篩選</h3>
+            
+            <div class="form-group">
+                <label>起始地：</label>
+                <input type="text" id="fromCity" placeholder="例如：台北 (TPE), 香港 (HKG)">
+            </div>
+            <div class="form-group">
+                <label>目的地：</label>
+                <input type="text" id="toCity" value="澳門 (MFM)" readonly>
+            </div>
+            <div class="form-group">
+                <label class="checkbox-item" style="background: #e8f5e9; border: 1px solid #4caf50;">
+                    <input type="checkbox" id="greenFlight" checked> 
+                    <strong>優先篩選「綠色飛行」</strong> (碳補償/低排碳機型) 
+                    <span class="sdgs-badge" style="margin:0 0 0 5px;">SDGs 13</span>
+                </label>
+            </div>
+
+            <button onclick="searchFlights()">篩選適合航空公司及價格</button>
+
+            <!-- 機票對比結果 -->
+            <div id="flightResult" style="margin-top: 15px; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript 互動邏輯 -->
+    <script>
+        // 頁面切換
+        function nextPage(pageNumber) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('page' + pageNumber).classList.add('active');
+        }
+
+        // 根據性別動態顯示生理期問題
+        function togglePeriod(show) {
+            document.getElementById('periodQuestion').style.display = show ? 'block' : 'none';
+        }
+
+        // 根據是否有慢性病顯示大類別
+        function toggleChronic(show) {
+            document.getElementById('chronicCategories').style.display = show ? 'block' : 'none';
+        }
+
+        // 顯示地圖區域天氣
+        function showWeather(region, temp, humidity) {
+            const display = document.getElementById('weatherDisplay');
+            display.style.display = 'block';
+            display.innerHTML = `<strong>📍 ${region} 實時氣象：</strong><br>溫度：${temp} | 濕度：${humidity}<br><small>💡 系統已根據目前氣候優化您的推薦路線。</small>`;
+        }
+
+        // 彈窗控制
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // 智能行程生成邏輯 (體現 SDGs)
+        function generateRoute() {
+            const intensity = document.getElementById('intensity').value;
+            const resultDiv = document.getElementById('routeResult');
+            resultDiv.style.display = 'block';
+
+            let accessibilityNotice = "♿ <strong>SDGs 10 減少不平等：</strong> 本行程已全面規劃無障礙坡道與低底盤公車接駁資訊，確保身心障礙與行動不便者暢行無阻。";
+            let carbonNotice = "🌱 <strong>SDGs 13 氣候行動：</strong> 推薦您此行程多採用「綠色步行接駁」。預計可比搭乘計程車<strong>減少約 2.4 kg 的碳排放量</strong>！";
+
+            resultDiv.innerHTML = `
+                <h4>✨ 您的專屬智慧行程已生成！</h4>
+                <p><strong>建議路線：</strong> 大三巴牌坊 ➡️ 議事亭前地 ➡️ 氹仔官也街</p>
+                <p style="font-size:0.9rem; color:#555;">${accessibilityNotice}</p>
+                <p style="font-size:0.9rem; color:#2e7d32;">${carbonNotice}</p>
+            `;
+        }
+
+        // 機票篩選與價格對比邏輯 (含綠色飛行)
+        function searchFlights() {
+            const isGreen = document.getElementById('greenFlight').checked;
+            const resultDiv = document.getElementById('flightResult');
+            resultDiv.style.display = 'block';
+
+            let flightData = '';
+            if (isGreen) {
+                flightData = `
+                    <div style="border: 1px solid #4caf50; padding:10px; margin-bottom:5px; border-radius:5px; background:#e8f5e9;">
+                        <strong>🟢 綠色航空 A (使用永續航空燃料)</strong><br>價格對比：TWD 6,500 / MOP 1,620<br><small>較常規飛行減碳 20% ｜ 適合追求低碳環保的您</small>
+                    </div>
+                    <div style="border: 1px solid #ccc; padding:10px; margin-bottom:5px; border-radius:5px;">
+                        <strong>星空航空 B (新型節能客機)</strong><br>價格對比：TWD 7,200 / MOP 1,800<br><small>高效率航線規劃減碳 12%</small>
+                    </div>
+                `;
+            } else {
+                flightData = `
+                    <div style="border: 1px solid #ccc; padding:10px; margin-bottom:5px; border-radius:5px;">
+                        <strong>常規航空 C</strong><br>價格對比：TWD 5,800 / MOP 1,450<br><small>標準經濟艙</small>
+                    </div>
+                    <div style="border: 1px solid #ccc; padding:10px; margin-bottom:5px; border-radius:5px;">
+                        <strong>經濟快線 D</strong><br>價格對比：TWD 5,200 / MOP 1,300<br><small>廉價航空（不含行李）</small>
+                    </div>
+                `;
+            }
+
+            resultDiv.innerHTML = `<h4>✈️ 適合您的航空公司及價格對比：</h4>` + flightData;
+        }
+    </script>
+</body>
+</html>
